@@ -6,7 +6,7 @@ import InvestorDashboard from "./components/dashboard/investor/Dashboard";
 import StartupDashboard from "./components/dashboard/startup/Dashboard";
 
 import { api } from "./utils/api";
-
+ 
 export default function App() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
