@@ -57,7 +57,7 @@ export default function InvestorDashboard({ user, onLogout }) {
 
       {/* Dashboard content */}
       <main className="mx-auto max-w-6xl px-6 py-10">
-        <section className="rounded-2xl bg-gradient-to-r from-emerald-800 to-teal-600 p-8 text-white sm:p-10">
+        <section className="rounded-2xl bg-linear-to-r from-emerald-800 to-teal-600 p-8 text-white sm:p-10">
           <p className="text-sm text-emerald-100">
             INVESTOR DASHBOARD
           </p>

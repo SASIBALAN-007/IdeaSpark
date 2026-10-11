@@ -76,7 +76,7 @@ export default function StartupDashboard({ user, onLogout }) {
       </header>
 
       <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
-        <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-indigo-900 to-violet-800 p-7 text-white shadow-lg sm:p-10 lg:p-12">
+        <section className="overflow-hidden rounded-3xl bg-linear-to-br from-indigo-950 via-indigo-900 to-violet-800 p-7 text-white shadow-lg sm:p-10 lg:p-12">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">
             Startup workspace
           </p>
