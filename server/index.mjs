@@ -19,6 +19,9 @@ import logoutRouter from "./routes/auth/logout.mjs";
 import startupDashboard from "./routes/startup/dashboard.mjs";
 import investorDashboard from "./routes/investor/dashboard.mjs";
 
+// usercount
+import startupUserCountrouter from "./routes/startup/userCount.mjs";
+import investorUserCountrouter from "./routes/investor/userCount.mjs"
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -59,6 +62,10 @@ app.use("/api/auth", logoutRouter);
 app.use("/api/startup", startupDashboard);
 app.use("/api/investor", investorDashboard);
 
+// ---- user Count ----
+
+app.use("/api",startupUserCountrouter);
+app.use("/api",investorUserCountrouter);
 // ---- Serve the built React app in production ----
 const distPath = path.join(__dirname, "..", "ui", "dist");
 app.use(express.static(distPath));

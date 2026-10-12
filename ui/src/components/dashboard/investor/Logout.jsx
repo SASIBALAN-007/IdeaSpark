@@ -1,15 +1,18 @@
 import { useState } from "react";
+import { LogOut } from "lucide-react";
 
-export default function Logout({ onLogout }) {
-  const [loading, setLoading] = useState(false);
+export default function LogoutButton({ onLogout }) {
+  const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleLogout() {
-    setLoading(true);
+    if (loggingOut) return;
+
+    setLoggingOut(true);
 
     try {
       await onLogout();
     } finally {
-      setLoading(false);
+      setLoggingOut(false);
     }
   }
 
@@ -17,10 +20,20 @@ export default function Logout({ onLogout }) {
     <button
       type="button"
       onClick={handleLogout}
-      disabled={loading}
-      className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+      disabled={loggingOut}
+      className="group inline-flex items-center gap-2 rounded-xl
+        border border-red-200 bg-white px-4 py-2.5
+        text-sm font-semibold text-red-600 shadow-sm
+        transition-all duration-200
+        hover:border-red-300 hover:bg-red-50 hover:shadow-md
+        active:scale-95
+        disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {loading ? "Logging out..." : "Logout"}
+      <LogOut
+        size={17}
+        className="transition-transform duration-200 group-hover:translate-x-0.5"
+      />
+      {loggingOut ? "Logging out..." : "Logout"}
     </button>
   );
 }

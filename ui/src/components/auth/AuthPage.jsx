@@ -59,14 +59,9 @@ async function onSubmit(event) {
       msg: data.message || "Authentication successful!",
     });
 
+    // Notify App to re-check auth. Once the authenticated user is loaded,
+    // the route guard redirects to the correct dashboard URL.
     window.dispatchEvent(new Event("auth-changed"));
-
-    // Redirect based on the selected account type
-    if (role === "investor") {
-      window.location.href = "/investorpage";
-    } else if (role === "startup") {
-      window.location.href = "/startup_page";
-    }
   } catch (error) {
     setStatus({
       type: "error",
