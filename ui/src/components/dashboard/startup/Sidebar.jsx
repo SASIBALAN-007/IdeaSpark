@@ -12,7 +12,7 @@ export default function Sidebar({onLogout}) {
   return (
     <aside className="min-h-screen w-full border-r border-slate-200 bg-white md:w-64 md:shrink-0">
       <div className="border-b border-slate-100 px-6 py-6">
-        <h1 className="text-xl font-bold text-indigo-700">
+        <h1 className="text-xl font-bold text-black">
           IdeaSpark<span className="text-slate-900">.</span>
         </h1>
         <p className="mt-1 text-sm text-slate-500">
