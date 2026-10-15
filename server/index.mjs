@@ -19,9 +19,15 @@ import logoutRouter from "./routes/auth/logout.mjs";
 import startupDashboard from "./routes/startup/dashboard.mjs";
 import investorDashboard from "./routes/investor/dashboard.mjs";
 
-// usercount
+// user count for both startup and investor
 import startupUserCountrouter from "./routes/startup/userCount.mjs";
-import investorUserCountrouter from "./routes/investor/userCount.mjs"
+import investorUserCountrouter from "./routes/investor/userCount.mjs";
+
+// /startup/sidebar APIs GET 
+import Investors_list from "./routes/startup/sidebarpages/investors.mjs";
+import askforinvestment from "./routes/startup/sidebarpages/askForInvestmestRoute.mjs";
+import startupMyIdeas from "./routes/startup/sidebarpages/myIdeas.mjs";
+import startupMyAccount from "./routes/startup/sidebarpages/myAccount.mjs";
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -62,18 +68,24 @@ app.use("/api/auth", logoutRouter);
 app.use("/api/startup", startupDashboard);
 app.use("/api/investor", investorDashboard);
 
-// ---- user Count ----
-
+// ---- Startup sidebar ----
 app.use("/api",startupUserCountrouter);
 app.use("/api",investorUserCountrouter);
+app.use("/api",startupMyIdeas);
+app.use("/api",startupMyAccount);
+
+// startup investors list 
+app.use("/api",Investors_list);
+app.use("/api",askforinvestment);
+
 // ---- Serve the built React app in production ----
 const distPath = path.join(__dirname, "..", "ui", "dist");
 app.use(express.static(distPath));
+
 // SPA fallback: any non-API GET returns index.html
 app.get(/^(?!\/api).*/, (req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
-
 const PORT = process.env.PORT || 5000;
 
 // Connect to the database first, then start listening.

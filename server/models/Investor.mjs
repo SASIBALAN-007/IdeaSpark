@@ -47,3 +47,4 @@ investorSchema.methods.matchPassword = async function (enteredPassword) {
 
 const Investor = mongoose.model("Investor", investorSchema);
 export default Investor;
+ 

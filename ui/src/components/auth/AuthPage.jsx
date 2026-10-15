@@ -10,7 +10,6 @@ import FormStatus from "./FormStatus";
 import { ROLE_META } from "../../constants/roleMeta";
 import { api } from "../../utils/api";
 
-const backgroundvideo = "/src/assets/authbackground.mp4"
 
 export default function AuthPage() {
   const [role, setRole] = useState("startup");
@@ -75,9 +74,9 @@ async function onSubmit(event) {
 
   return (
     <main className="relative isolate grid min-h-screen overflow-hidden
-     bg-slate-950 lg:grid-cols-2">
+     bg-white lg:grid-cols-2">
 
-      {/* Background video across the entire page */}
+      {/* Background video across the entire page
       <video
         autoPlay
         muted
@@ -87,14 +86,7 @@ async function onSubmit(event) {
         className="absolute inset-0 z-0 h-full w-full object-cover"
       >
         <source src={backgroundvideo} type="video/mp4" />
-      </video>
-
-      {/* Dark overlay across both panels */}
-      <div className="absolute inset-0 z-0 bg-emerald-900/70" />
-
-
-      {/* Dark overlay across both panels */}
-      <div className="absolute inset-0 z-0 bg-emerald-950/70" />
+      </video> */}
 
       {/* Left branding panel */}
       <BrandPanel meta={meta} />
@@ -104,22 +96,22 @@ async function onSubmit(event) {
       justify-center px-4 py-8 sm:px-8 lg:px-10">
         <div className="w-full max-w-sm animate-fade-up">
           {/* Logo on mobile */}
-          <div className="mb-6 text-white lg:hidden">
+          <div className="mb-6 text-black lg:hidden">
             <Logo />
           </div>
 
-          <div className="text-white [&_input+button]:text-white/70
-           [&_input]:border-white/30 [&_input]:bg-white/10 [&_input]:text-white
-            [&_input]:placeholder:text-white/50 [&_label]:text-white">
-            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-white/80">
+          <div className="text-black [&_input+button]:text-black/70
+           [&_input]:border-black/30 [&_input]:bg-white [&_input]:text-black
+            [&_input]:placeholder:text-black/50 [&_label]:text-black">
+            <p className="mb-3 text-xs font-bold uppercase tracking-widest text-black/80">
               The IdeaSpark Network
             </p>
 
-            <h1 className="text-3xl font-bold text-white">
+            <h1 className="text-3xl font-bold text-black">
               {mode === "signin" ? "Welcome back" : "Join IdeaSpark"}
             </h1>
 
-            <p className="mt-2 text-sm leading-6 text-white/80">
+            <p className="mt-2 text-sm leading-6 text-black/80">
               {mode === "signin"
                 ? "Sign in to continue connecting ideas with capital."
                 : "Create your account and discover new opportunities."}
@@ -127,25 +119,25 @@ async function onSubmit(event) {
 
             {/* Account type selection */}
             <div className="mt-5">
-              <p className="mb-2 text-sm font-semibold text-white">
+              <p className="mb-2 text-sm font-semibold text-black">
                 Choose your account type
               </p>
 
-              <div className="[&>div]:bg-white/15 [&_button.bg-white]:text-slate-900
-               [&_button:not(.bg-white):hover]:text-white [&_button]:text-white/80">
+              <div className="[&>div]:bg-slate-100 [&_button.bg-white]:text-slate-900
+               [&_button:not(.bg-white):hover]:text-black [&_button]:text-black/80">
                 <RoleSelector role={role} onSwitchRole={switchRole} />
               </div>
             </div>
 
             {/* Form heading */}
-            <div className="my-4 border-b border-white/20 pb-4">
-              <h2 className="font-semibold text-white">
+            <div className="my-4 border-b border-black/20 pb-4">
+              <h2 className="font-semibold text-black">
                 {mode === "signin"
                   ? `Sign in as ${meta.label}`
                   : `Create your ${meta.label} account`}
               </h2>
 
-              <p className="mt-1 text-sm text-white/80">
+              <p className="mt-1 text-sm text-black/80">
                 {role === "startup"
                   ? "Connect your startup with investors."
                   : "Discover startups and investment opportunities."}
@@ -164,7 +156,7 @@ async function onSubmit(event) {
                 className={`flex w-full items-center justify-center gap-2 rounded-xl
                    bg-gradient-to-r ${meta.accent} px-4 py-3 text-sm font-semibold text-white
                     shadow-md transition duration-200 hover:-translate-y-0.5 hover:shadow-lg 
-                    focus:outline-none focus:ring-2 focus:ring-white/50 disabled:translate-y-0
+                    focus:outline-none focus:ring-2 focus:ring-black/30 disabled:translate-y-0
                      disabled:cursor-not-allowed disabled:opacity-60`}
               >
                 {loading
@@ -178,12 +170,12 @@ async function onSubmit(event) {
             </form>
 
             {/* Switch between signin and signup */}
-            <div className="[&_button]:text-white [&_p]:text-white/80">
+            <div className="[&_button]:text-black [&_p]:text-black/80">
               <AuthModeToggle mode={mode} onSwitchMode={switchMode} />
             </div>
 
-            <p className="mt-5 border-t border-white/20 pt-4 text-center text-xs
-             text-white/70">
+            <p className="mt-5 border-t border-black/20 pt-4 text-center text-xs
+             text-black/70">
               Secure access · © {new Date().getFullYear()} IdeaSpark
             </p>
           </div>

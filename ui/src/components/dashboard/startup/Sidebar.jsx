@@ -1,4 +1,4 @@
-
+import LogoutButton from "./Logout";
 import { NavLink } from "react-router-dom";
 
 const menuItems = [
@@ -8,7 +8,7 @@ const menuItems = [
   { label: "My Account", path: "/startup/user_account" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({onLogout}) {
   return (
     <aside className="min-h-screen w-full border-r border-slate-200 bg-white md:w-64 md:shrink-0">
       <div className="border-b border-slate-100 px-6 py-6">
@@ -40,6 +40,7 @@ export default function Sidebar() {
             {item.label}
           </NavLink>
         ))}
+        <LogoutButton onLogout={onLogout} />
       </nav>
     </aside>
   );
