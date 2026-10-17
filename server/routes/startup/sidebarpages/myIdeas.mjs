@@ -1,193 +1,469 @@
 
 import { Router } from "express";
 import mongoose from "mongoose";
+import multer from "multer";
 
 import StartupIdeas from "../../../models/StartupIdeas.mjs";
 import ProjectDocument from "../../../models/ProjectDocument.mjs";
 import { protect } from "../../../middleware/auth.mjs";
+import uploadProjectPDF from "../../../middleware/projectPDFUpload.mjs";
 
 const router = Router();
 
+const uploadPDF = uploadProjectPDF.single("projectDocument");
 
-// GET: List projects owned by the logged-in startup
+const VALID_STAGES = ["Idea", "Prototype", "MVP", "Launched"];
+
+const ALLOWED_FIELDS = [
+  "title",
+  "shortDescription",
+  "problemStatement",
+  "solution",
+  "domain",
+  "targetConsumers",
+  "businessModel",
+  "stage",
+  "fundingRequired",
+  "location",
+];
+
+// Parse targetConsumers sent through FormData.
+function parseTargetConsumers(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return value;
+
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {
+    // Allow comma-separated values.
+  }
+
+  return value.split(",");
+}
+
+function validTargetConsumers(value) {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every(
+      (item) => typeof item === "string" && item.trim().length > 0
+    )
+  );
+}
+
+// Save PDF using the REQUIRED ProjectDocument schema fields.
+async function savePDF(file, startupId) {
+  if (!file) return null;
+
+  return ProjectDocument.create({
+    fileName: file.originalname,
+    fileData: file.buffer,
+    startup: startupId,
+  });
+}
+
+async function deletePDF(documentId) {
+  if (!documentId) return;
+
+  await ProjectDocument.findByIdAndDelete(documentId);
+}
+
+function isStartup(req, res) {
+  if (req.user?.role !== "startup") {
+    res.status(403).json({
+      success: false,
+      message: "Only startups can manage projects",
+    });
+
+    return false;
+  }
+
+  return true;
+}
+
+// Validate project fields shared by POST and PATCH.
+function validateProjectFields(body, partial = false) {
+  const errors = [];
+
+  if (!partial || body.title !== undefined) {
+    if (
+      typeof body.title !== "string" ||
+      !body.title.trim() ||
+      body.title.trim().length > 150
+    ) {
+      errors.push("Title is required and must be at most 150 characters");
+    }
+  }
+
+  if (!partial || body.shortDescription !== undefined) {
+    if (
+      typeof body.shortDescription !== "string" ||
+      !body.shortDescription.trim() ||
+      body.shortDescription.trim().length > 500
+    ) {
+      errors.push(
+        "Short description is required and must be at most 500 characters"
+      );
+    }
+  }
+
+  for (const field of ["problemStatement", "solution", "domain"]) {
+    if (!partial || body[field] !== undefined) {
+      if (
+        typeof body[field] !== "string" ||
+        !body[field].trim()
+      ) {
+        errors.push(`${field} is required`);
+      }
+    }
+  }
+
+  if (!partial || body.targetConsumers !== undefined) {
+    const consumers = parseTargetConsumers(body.targetConsumers);
+
+    if (!validTargetConsumers(consumers)) {
+      errors.push("Provide at least one valid target consumer");
+    }
+  }
+
+  if (body.fundingRequired !== undefined) {
+    if (
+      body.fundingRequired === "" ||
+      !Number.isFinite(Number(body.fundingRequired)) ||
+      Number(body.fundingRequired) < 0
+    ) {
+      errors.push("Funding required must be a non-negative number");
+    }
+  }
+
+  if (
+    body.stage !== undefined &&
+    !VALID_STAGES.includes(body.stage)
+  ) {
+    errors.push("Invalid project stage");
+  }
+
+  return errors;
+}
+
+
 // GET /api/startup/ideas
+// List projects owned by the logged-in startup.
+
+
 router.get("/startup/ideas", protect, async (req, res) => {
   try {
-    if (req.user?.role !== "startup") {
-      return res.status(403).json({
-        message: "Only startups can view their projects",
-      });
-    }
+    if (!isStartup(req, res)) return;
 
     const projects = await StartupIdeas.find({
       startup: req.user._id,
     }).sort({ createdAt: -1 });
 
-    return res.status(200).json({ projects });
+    return res.status(200).json({
+      success: true,
+      projects,
+    });
   } catch (error) {
     console.error("Fetch startup projects error:", error);
 
     return res.status(500).json({
+      success: false,
       message: "Failed to fetch startup projects",
     });
   }
 });
 
-// PATCH: Edit an existing startup idea
-// PATCH /api/startup/ideas/:id
-router.patch("/startup/ideas/:id", protect, async (req, res) => {
-  try {
-    if (req.user?.role !== "startup") {
-      return res.status(403).json({
-        message: "Only startups can edit projects",
-      });
-    }
 
-    const { id } = req.params;
+// POST /api/startup/ideas
+// Create a project and optionally upload a PDF.
 
-    if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({
-        message: "Invalid project ID",
-      });
-    }
 
-    // Only allow these fields to be updated
-    const allowedFields = [
-      "title",
-      "shortDescription",
-      "problemStatement",
-      "solution",
-      "domain",
-      "targetConsumers",
-      "businessModel",
-      "stage",
-      "fundingRequired",
-      "location",
-    ];
+router.post(
+  "/startup/ideas",
+  protect,
+  uploadPDF,
+  async (req, res) => {
+    let savedDocument = null;
 
-    const updates = {};
+    try {
+      if (!isStartup(req, res)) return;
 
-    for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
-    }
+      const errors = validateProjectFields(req.body);
 
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({
-        message: "No valid fields provided for update",
-      });
-    }
-
-    // Validate values before saving
-    if (
-      updates.title !== undefined &&
-      (typeof updates.title !== "string" ||
-        !updates.title.trim() ||
-        updates.title.length > 150)
-    ) {
-      return res.status(400).json({
-        message: "Title is required and must be under 150 characters",
-      });
-    }
-
-    if (
-      updates.shortDescription !== undefined &&
-      (typeof updates.shortDescription !== "string" ||
-        !updates.shortDescription.trim() ||
-        updates.shortDescription.length > 100)
-    ) {
-      return res.status(400).json({
-        message: "Provide a valid short description under 100 characters",
-      });
-    }
-
-    if (
-      updates.fundingRequired !== undefined &&
-      (!Number.isFinite(Number(updates.fundingRequired)) ||
-        Number(updates.fundingRequired) < 0)
-    ) {
-      return res.status(400).json({
-        message: "Funding required must be a non-negative number",
-      });
-    }
-
-    if (
-      updates.stage !== undefined &&
-      !["Idea", "Prototype", "MVP", "Launched"].includes(updates.stage)
-    ) {
-      return res.status(400).json({
-        message: "Invalid project stage",
-      });
-    }
-
-    if (updates.targetConsumers !== undefined) {
-      if (
-        !Array.isArray(updates.targetConsumers) ||
-        updates.targetConsumers.length === 0 ||
-        updates.targetConsumers.some(
-          (item) => typeof item !== "string" || !item.trim()
-        )
-      ) {
+      if (errors.length) {
         return res.status(400).json({
-          message: "Provide at least one valid target consumer",
+          success: false,
+          message: errors[0],
+          errors,
         });
       }
-    }
 
-    // The owner must match the logged-in startup
-    const project = await StartupIdeas.findOneAndUpdate(
-      {
+      const {
+        title,
+        shortDescription,
+        problemStatement,
+        solution,
+        domain,
+        businessModel,
+        stage,
+        fundingRequired,
+        location,
+      } = req.body;
+
+      const targetConsumers = parseTargetConsumers(
+        req.body.targetConsumers
+      );
+
+      const projectStage = stage || "Idea";
+      const funding = Number(fundingRequired ?? 0);
+
+      // Save the PDF using fileName, fileData, and startup.
+      savedDocument = await savePDF(req.file, req.user._id);
+
+      const project = await StartupIdeas.create({
+        startup: req.user._id,
+        title: title.trim(),
+        shortDescription: shortDescription.trim(),
+        problemStatement: problemStatement.trim(),
+        solution: solution.trim(),
+        domain: domain.trim(),
+        targetConsumers: targetConsumers.map((item) => item.trim()),
+        businessModel: businessModel?.trim() || "",
+        stage: projectStage,
+        fundingRequired: funding,
+        location: location?.trim() || "",
+        projectDocument: savedDocument?._id || null,
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: "Project created successfully",
+        project,
+      });
+    } catch (error) {
+      if (savedDocument?._id) {
+        await deletePDF(savedDocument._id).catch((cleanupError) =>
+          console.error("PDF cleanup error:", cleanupError)
+        );
+      }
+
+      console.error("Create project error:", error);
+
+      if (
+        error.name === "ValidationError" ||
+        error.name === "CastError"
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to create project",
+      });
+    }
+  }
+);
+
+// PATCH /api/startup/ideas/:id
+// Update project details and/or replace its PDF.
+
+
+
+router.patch(
+  "/startup/ideas/:id",
+  protect,
+  uploadPDF,
+  async (req, res) => {
+    let newDocument = null;
+
+    try {
+      if (!isStartup(req, res)) return;
+
+      const { id } = req.params;
+
+      if (!mongoose.isValidObjectId(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid project ID",
+        });
+      }
+
+      const existingProject = await StartupIdeas.findOne({
         _id: id,
         startup: req.user._id,
-      },
-      { $set: updates },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+      });
 
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found or you do not own this project",
+      if (!existingProject) {
+        return res.status(404).json({
+          success: false,
+          message: "Project not found or you do not own this project",
+        });
+      }
+
+      const updates = {};
+
+      for (const field of ALLOWED_FIELDS) {
+        if (req.body[field] !== undefined) {
+          updates[field] = req.body[field];
+        }
+      }
+
+      if (updates.targetConsumers !== undefined) {
+        updates.targetConsumers = parseTargetConsumers(
+          updates.targetConsumers
+        );
+      }
+
+      const errors = validateProjectFields(updates, true);
+
+      if (errors.length) {
+        return res.status(400).json({
+          success: false,
+          message: errors[0],
+          errors,
+        });
+      }
+
+      if (updates.title !== undefined) {
+        updates.title = updates.title.trim();
+      }
+
+      if (updates.shortDescription !== undefined) {
+        updates.shortDescription = updates.shortDescription.trim();
+      }
+
+      for (const field of [
+        "problemStatement",
+        "solution",
+        "domain",
+        "businessModel",
+        "location",
+      ]) {
+        if (updates[field] !== undefined) {
+          if (typeof updates[field] !== "string") {
+            return res.status(400).json({
+              success: false,
+              message: `${field} must be text`,
+            });
+          }
+
+          updates[field] = updates[field].trim();
+        }
+      }
+
+      if (updates.targetConsumers !== undefined) {
+        updates.targetConsumers = updates.targetConsumers.map(
+          (item) => item.trim()
+        );
+      }
+
+      if (updates.fundingRequired !== undefined) {
+        updates.fundingRequired = Number(updates.fundingRequired);
+      }
+
+      // A new PDF replaces the old PDF.
+
+
+      if (req.file) {
+        newDocument = await savePDF(req.file, req.user._id);
+        updates.projectDocument = newDocument._id;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No valid fields or PDF provided for update",
+        });
+      }
+
+      const oldDocumentId = existingProject.projectDocument;
+
+      const project = await StartupIdeas.findOneAndUpdate(
+        {
+          _id: id,
+          startup: req.user._id,
+        },
+        { $set: updates },
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+      if (!project) {
+        if (newDocument?._id) {
+          await deletePDF(newDocument._id);
+          newDocument = null;
+        }
+
+        return res.status(404).json({
+          success: false,
+          message: "Project not found or you do not own this project",
+        });
+      }
+
+      // Once the project points to the new PDF, clean up the old one.
+
+
+      if (newDocument && oldDocumentId) {
+        await deletePDF(oldDocumentId).catch((cleanupError) => {
+          console.error("Old PDF cleanup error:", cleanupError);
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Project updated successfully",
+        project,
+      });
+    } catch (error) {
+      if (newDocument?._id) {
+        await deletePDF(newDocument._id).catch((cleanupError) =>
+          console.error("PDF cleanup error:", cleanupError)
+        );
+      }
+
+      console.error("Update project error:", error);
+
+      if (
+        error.name === "ValidationError" ||
+        error.name === "CastError"
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update project",
       });
     }
-
-    return res.status(200).json({
-      success: true,
-      message: "Project updated successfully",
-      project,
-    });
-  } catch (error) {
-    console.error("Update project error:", error);
-
-    return res.status(500).json({
-      message: "Failed to update project",
-    });
   }
-});
+);
 
 
-// DELETE: Delete the entire startup project and its PDF
 // DELETE /api/startup/ideas/:id
+// Delete a project and then its linked PDF.
+
 router.delete("/startup/ideas/:id", protect, async (req, res) => {
   try {
-    if (req.user?.role !== "startup") {
-      return res.status(403).json({
-        message: "Only startups can delete projects",
-      });
-    }
+    if (!isStartup(req, res)) return;
 
     const { id } = req.params;
 
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({
+        success: false,
         message: "Invalid project ID",
       });
     }
 
-    // Find only a project owned by the logged-in startup
     const project = await StartupIdeas.findOne({
       _id: id,
       startup: req.user._id,
@@ -195,19 +471,20 @@ router.delete("/startup/ideas/:id", protect, async (req, res) => {
 
     if (!project) {
       return res.status(404).json({
+        success: false,
         message: "Project not found or you do not own this project",
       });
     }
 
-    // Remove linked PDF document, if present
-    if (project.projectDocument) {
-      await ProjectDocument.findByIdAndDelete(
-        project.projectDocument
-      );
-    }
-
-    // Remove the project
+    // Delete the project first so a PDF deletion failure
+    // cannot leave the project pointing to a missing document.
     await StartupIdeas.findByIdAndDelete(project._id);
+
+    if (project.projectDocument) {
+      await deletePDF(project.projectDocument).catch((cleanupError) => {
+        console.error("PDF cleanup error:", cleanupError);
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -217,114 +494,45 @@ router.delete("/startup/ideas/:id", protect, async (req, res) => {
     console.error("Delete project error:", error);
 
     return res.status(500).json({
+      success: false,
       message: "Failed to delete project",
     });
   }
 });
 
-// POST: Create a new startup idea
-// POST /api/startup/ideas
-router.post("/startup/ideas", protect, async (req, res) => {
-  try {
-    if (req.user?.role !== "startup") {
-      return res.status(403).json({
-        message: "Only startups can create projects",
+// Multer and PDF upload error handler
+
+
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({
+        success: false,
+        message: "PDF must be smaller than 15 MB",
       });
     }
 
-    const {
-      title,
-      shortDescription,
-      problemStatement,
-      solution,
-      domain,
-      targetConsumers,
-      businessModel,
-      stage,
-      fundingRequired,
-      location,
-    } = req.body;
-
-    if (typeof title !== "string" || !title.trim() || title.length > 150) {
+    if (error.code === "LIMIT_FILE_COUNT") {
       return res.status(400).json({
-        message: "Title is required and must be under 150 characters",
+        success: false,
+        message: "Only one PDF can be uploaded per request",
       });
     }
 
-    if (
-      typeof shortDescription !== "string" ||
-      !shortDescription.trim() ||
-      shortDescription.length > 100
-    ) {
-      return res.status(400).json({
-        message: "Provide a valid short description under 100 characters",
-      });
-    }
-
-    if (
-      typeof problemStatement !== "string" || !problemStatement.trim() ||
-      typeof solution !== "string" || !solution.trim() ||
-      typeof domain !== "string" || !domain.trim()
-    ) {
-      return res.status(400).json({
-        message: "Problem statement, solution and domain are required",
-      });
-    }
-
-    if (
-      !Array.isArray(targetConsumers) ||
-      targetConsumers.length === 0 ||
-      targetConsumers.some((item) => typeof item !== "string" || !item.trim())
-    ) {
-      return res.status(400).json({
-        message: "Provide at least one valid target consumer",
-      });
-    }
-
-    const funding = Number(fundingRequired ?? 0);
-    if (!Number.isFinite(funding) || funding < 0) {
-      return res.status(400).json({
-        message: "Funding required must be a non-negative number",
-      });
-    }
-
-    const projectStage = stage || "Idea";
-    if (!["Idea", "Prototype", "MVP", "Launched"].includes(projectStage)) {
-      return res.status(400).json({
-        message: "Invalid project stage",
-      });
-    }
-
-    const project = await StartupIdeas.create({
-      startup: req.user._id,
-      title: title.trim(),
-      shortDescription: shortDescription.trim(),
-      problemStatement: problemStatement.trim(),
-      solution: solution.trim(),
-      domain: domain.trim(),
-      targetConsumers: targetConsumers.map((item) => item.trim()),
-      businessModel: businessModel?.trim() || "",
-      stage: projectStage,
-      fundingRequired: funding,
-      location: location?.trim() || "",
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Project created successfully",
-      project,
-    });
-  } catch (error) {
-    console.error("Create project error:", error);
-
-    if (error.name === "ValidationError") {
-      return res.status(400).json({ message: error.message });
-    }
-
-    return res.status(500).json({
-      message: "Failed to create project",
+    return res.status(400).json({
+      success: false,
+      message: error.message,
     });
   }
+
+  if (error.message === "Only PDF files are allowed.") {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+
+  return next(error);
 });
 
 export default router;

@@ -1,10 +1,11 @@
 import { Router } from "express";
 import Startup from "../../../models/Startup.mjs";
+import { protect, authorize } from "../../../middleware/auth.mjs";
 
 const router = Router();
 
 // GET: List all startup companies
-router.get("/investors/startups", async (req, res) => {
+router.get("/investors/startups", protect, authorize("investor"), async (req, res) => {
   try {
     const startups = await Startup.find()
       .select("-password")

@@ -44,7 +44,6 @@ const startupIdeaSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      // Examples: Healthcare, Education, FinTech
     },
 
     targetConsumers: {
@@ -52,9 +51,13 @@ const startupIdeaSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: (values) =>
+          Array.isArray(values) &&
           values.length > 0 &&
-          values.every((value) => value.trim().length > 0),
-        message: "Add at least one target consumer group",
+          values.every(
+            (value) =>
+              typeof value === "string" && value.trim().length > 0
+          ),
+        message: "Add at least one valid target consumer group",
       },
     },
 
@@ -82,13 +85,14 @@ const startupIdeaSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Admin review status
     reviewStatus: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
     },
 
-    // Reference to the separate PDF document
+    // Reference to the uploaded PDF in ProjectDocument collection
     projectDocument: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProjectDocument",
@@ -100,4 +104,8 @@ const startupIdeaSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("StartupIdea", startupIdeaSchema);
+const StartupIdeas =
+  mongoose.models.StartupIdea ||
+  mongoose.model("StartupIdea", startupIdeaSchema);
+
+export default StartupIdeas;

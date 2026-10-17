@@ -22,6 +22,17 @@ import StartupMyIdeas from "./components/dashboard/startup/sidebarpages/MyIdeas"
 // api middleware
 import { api } from "./utils/api";
 
+// Route guard: only users with the required role may render the page.
+// Guests are sent to "/" (the auth screen) and authenticated users with a
+// different role are bounced to their own dashboard by the "/" route.
+function RequireRole({ user, role, children }) {
+  if (user?.role !== role) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
@@ -83,57 +94,85 @@ export default function App() {
       <Route
         path="/startup"
         element={
-          user?.role === "startup" ? (
+          <RequireRole user={user} role="startup">
             <StartupDashboard user={user} onLogout={onLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
+          </RequireRole>
         }
       />
       <Route
         path="/startup/investors"
-        element={<StartupAskInvestors />}
+        element={
+          <RequireRole user={user} role="startup">
+            <StartupAskInvestors />
+          </RequireRole>
+        }
       />
 
       <Route
         path="/startup/ask-investment"
-        element={<StartupAskForInvestment />}
+        element={
+          <RequireRole user={user} role="startup">
+            <StartupAskForInvestment />
+          </RequireRole>
+        }
       />
       <Route
         path="/startup/ideas"
-        element={<StartupMyIdeas />}
+        element={
+          <RequireRole user={user} role="startup">
+            <StartupMyIdeas />
+          </RequireRole>
+        }
       />
 
       <Route
         path="/startup/user_account"
-        element={<StartupMyAccount />}
+        element={
+          <RequireRole user={user} role="startup">
+            <StartupMyAccount />
+          </RequireRole>
+        }
       />
       {/* investors routes*/}
       <Route
         path="/investor"
         element={
-          user?.role === "investor" ? (
+          <RequireRole user={user} role="investor">
             <InvestorDashboard user={user} onLogout={onLogout} />
-          ) : (
-            <Navigate to="/" replace />
-          )
+          </RequireRole>
         }
       />
       <Route
       path= "/investor/user_account"
-      element = { < InvestorMyaccount /> }
+      element={
+        <RequireRole user={user} role="investor">
+          <InvestorMyaccount />
+        </RequireRole>
+      }
       />
       <Route
       path= "/investor/startup_ideas"
-      element = { < InvestmentStartupIdeas /> }
+      element={
+        <RequireRole user={user} role="investor">
+          <InvestmentStartupIdeas />
+        </RequireRole>
+      }
       />
       <Route
       path= "/investor/investment_request"
-      element = { < InvestmentRequests /> }
+      element={
+        <RequireRole user={user} role="investor">
+          <InvestmentRequests />
+        </RequireRole>
+      }
       />
       <Route
       path= "/investor/startups"
-      element = { < AboutStartups /> }
+      element={
+        <RequireRole user={user} role="investor">
+          <AboutStartups />
+        </RequireRole>
+      }
       />
 
       {/* Unknown path -> back to the landing/auth screen. */}

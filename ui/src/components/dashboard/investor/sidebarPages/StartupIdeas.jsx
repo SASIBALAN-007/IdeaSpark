@@ -13,6 +13,7 @@ import {
   Lightbulb,
   AlertCircle,
   FileText,
+  Download,
 } from "lucide-react";
 
 const API_URL = "http://localhost:5000";
@@ -24,9 +25,10 @@ export default function StartupIdeas() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [processingId, setProcessingId] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
   const [notice, setNotice] = useState("");
 
-  // Fetch startup ideas from MongoDB
+  // Fetch startup ideas
   const fetchIdeas = useCallback(async () => {
     try {
       setLoading(true);
@@ -40,24 +42,21 @@ export default function StartupIdeas() {
         }
       );
 
-const contentType = response.headers.get("content-type") || "";
+      const contentType = response.headers.get("content-type") || "";
 
-if (!contentType.includes("application/json")) {
-  const responseText = await response.text();
+      if (!contentType.includes("application/json")) {
+        const responseText = await response.text();
+        console.error("Expected JSON but received:", responseText);
 
-  console.error("Expected JSON but received:", responseText);
+        throw new Error(
+          `Expected JSON from the API. Check your API URL and Express route. Status: ${response.status}`
+        );
+      }
 
-  throw new Error(
-    `Expected JSON from the API, but received HTML or another response. Check the API URL and Express route. Status: ${response.status}`
-  );
-}
-
-const data = await response.json();
+      const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Unable to fetch startup ideas."
-        );
+        throw new Error(data.message || "Unable to fetch startup ideas.");
       }
 
       setIdeas(data.startupIdeas || []);
@@ -71,6 +70,70 @@ const data = await response.json();
   useEffect(() => {
     fetchIdeas();
   }, [fetchIdeas]);
+
+  // Download the startup PDF
+  const downloadDocument = async (idea) => {
+    try {
+      setDownloadingId(idea._id);
+      setError("");
+      setNotice("");
+
+      const response = await fetch(
+        `${API_URL}/api/investor/startup_ideas/${idea._id}/document/download`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type") || "";
+        let message = "Unable to download the startup document.";
+
+        if (contentType.includes("application/json")) {
+          const data = await response.json();
+          message = data.message || message;
+        } else {
+          const responseText = await response.text();
+          console.error("Download API response:", responseText);
+          message = `Download failed. Status: ${response.status}`;
+        }
+
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+
+      if (blob.size === 0) {
+        throw new Error("The downloaded PDF is empty.");
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      const fileName =
+        idea.projectDocument?.fileName || "startup-pitch.pdf";
+
+      link.href = objectUrl;
+      link.download = fileName.toLowerCase().endsWith(".pdf")
+        ? fileName
+        : `${fileName}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      // Revoke after the browser has started processing the download
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+
+      setNotice(`Downloaded the document for "${idea.title}".`);
+    } catch (err) {
+      console.error("PDF download error:", err);
+      setError(err.message || "Unable to download the PDF.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   // Approve or reject a startup idea
   const reviewIdea = async (id, reviewStatus) => {
@@ -103,20 +166,17 @@ const data = await response.json();
 
       if (!contentType.includes("application/json")) {
         const responseText = await response.text();
-
         console.error("Expected JSON but received:", responseText);
 
         throw new Error(
-          `Expected JSON from the API, but received HTML or another response. Check the API URL and Express route. Status: ${response.status}`
+          `Expected JSON from the API. Check your API URL and Express route. Status: ${response.status}`
         );
       }
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to update review status."
-        );
+        throw new Error(data.message || "Failed to update review status.");
       }
 
       setIdeas((previousIdeas) =>
@@ -204,11 +264,12 @@ const data = await response.json();
           </h1>
 
           <p className="mt-2 text-sm text-gray-500">
-            Explore startup opportunities and review submissions.
+            Explore startup opportunities, download pitch decks, and review submissions.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={fetchIdeas}
           className="inline-flex items-center justify-center gap-2 self-start rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium transition hover:bg-gray-100 sm:self-auto"
         >
@@ -224,11 +285,14 @@ const data = await response.json();
           className="mb-5 flex items-start gap-3 rounded-lg border border-gray-300 bg-gray-50 p-4"
         >
           <AlertCircle className="mt-0.5 shrink-0" size={19} />
+
           <div className="flex-1">
             <p className="font-semibold">Something went wrong</p>
             <p className="mt-1 text-sm text-gray-600">{error}</p>
           </div>
+
           <button
+            type="button"
             onClick={fetchIdeas}
             className="text-sm font-semibold underline"
           >
@@ -306,10 +370,7 @@ const data = await response.json();
       {/* Ideas list */}
       {filteredIdeas.length === 0 ? (
         <div className="rounded-xl border border-gray-200 px-5 py-16 text-center">
-          <Lightbulb
-            size={42}
-            className="mx-auto mb-4 text-gray-400"
-          />
+          <Lightbulb size={42} className="mx-auto mb-4 text-gray-400" />
 
           <h2 className="text-lg font-semibold">
             {ideas.length === 0
@@ -328,7 +389,9 @@ const data = await response.json();
           {filteredIdeas.map((idea) => {
             const status = getStatus(idea);
             const isProcessing = processingId === idea._id;
+            const isDownloading = downloadingId === idea._id;
             const isPending = status === "Pending";
+            const hasDocument = Boolean(idea.projectDocument);
 
             return (
               <article
@@ -345,9 +408,7 @@ const data = await response.json();
                     <StatusBadge status={status} />
                   </div>
 
-                  <h2 className="text-xl font-bold">
-                    {idea.title}
-                  </h2>
+                  <h2 className="text-xl font-bold">{idea.title}</h2>
 
                   <p className="mt-2 text-sm leading-6 text-gray-600">
                     {idea.shortDescription}
@@ -377,6 +438,7 @@ const data = await response.json();
                       <Wallet size={15} />
                       Funding Required
                     </p>
+
                     <p className="text-lg font-bold">
                       {formatFunding(idea.fundingRequired)}
                     </p>
@@ -386,6 +448,7 @@ const data = await response.json();
                     <p className="mb-2 text-xs text-gray-500">
                       Development Stage
                     </p>
+
                     <p className="text-lg font-bold">
                       {idea.stage || "Idea"}
                     </p>
@@ -431,17 +494,48 @@ const data = await response.json();
                     </div>
                   </div>
 
-                  {idea.projectDocument && (
-                    <div>
-                      <h3 className="mb-2 text-sm font-semibold">
-                        Project Document
-                      </h3>
-                      <p className="flex items-center gap-2 text-sm text-gray-600">
-                        <FileText size={16} />
-                        Document attached
+                  {/* PDF document and download */}
+                  <div className="rounded-lg border border-gray-200 p-4">
+                    <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                      <FileText size={16} />
+                      Project Document
+                    </h3>
+
+                    {hasDocument ? (
+                      <>
+                        <p className="mb-3 break-words text-sm text-gray-600">
+                          {idea.projectDocument?.fileName ||
+                            "Startup pitch deck PDF"}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() => downloadDocument(idea)}
+                          disabled={isDownloading}
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                          {isDownloading ? (
+                            <>
+                              <RefreshCw
+                                size={16}
+                                className="animate-spin"
+                              />
+                              Downloading...
+                            </>
+                          ) : (
+                            <>
+                              <Download size={16} />
+                              Download Pitch Deck
+                            </>
+                          )}
+                        </button>
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        No PDF document attached.
                       </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {idea.createdAt && (
                     <p className="text-xs text-gray-400">
@@ -463,22 +557,18 @@ const data = await response.json();
                   {isPending ? (
                     <div className="flex flex-col gap-3 sm:flex-row">
                       <button
-                        onClick={() =>
-                          reviewIdea(idea._id, "Approved")
-                        }
+                        type="button"
+                        onClick={() => reviewIdea(idea._id, "Approved")}
                         disabled={isProcessing}
                         className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Check size={17} />
-                        {isProcessing
-                          ? "Processing..."
-                          : "Approve Idea"}
+                        {isProcessing ? "Processing..." : "Approve Idea"}
                       </button>
 
                       <button
-                        onClick={() =>
-                          reviewIdea(idea._id, "Rejected")
-                        }
+                        type="button"
+                        onClick={() => reviewIdea(idea._id, "Rejected")}
                         disabled={isProcessing}
                         className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-black bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                       >
@@ -532,6 +622,7 @@ function DetailSection({ title, text }) {
   return (
     <div>
       <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+
       <p className="whitespace-pre-line text-sm leading-6 text-gray-600">
         {text || "Not provided"}
       </p>

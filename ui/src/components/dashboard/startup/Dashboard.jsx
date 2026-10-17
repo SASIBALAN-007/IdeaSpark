@@ -122,7 +122,7 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
 
       {/* Hero */}
       <section id="top" className="relative border-b-2 border-black px-5 pb-14 pt-16 md:px-10 md:pt-24">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:radial-gradient(#000_1.2px,transparent_1.2px)] [background-size:22px_22px] [mask-image:linear-gradient(to_bottom,#000,transparent_85%)]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:radial-gradient(#000_1.2px,transparent_1.2px) ] [ background-size:22px_22px] [ mask-image:linear-gradient(to_bottom,#000,transparent_85%)]" />
         <div className="relative mx-auto max-w-6xl">
           <h1 className="is-rise text-[clamp(40px,8.2vw,104px)] font-extrabold leading-[0.95] tracking-[-0.035em]">
             Ideas need money.
@@ -139,7 +139,7 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
 
           {/* The bridge: one spark crosses over, funding comes back */}
           <div className="mt-16 overflow-x-auto">
-            <svg viewBox="0 0 1000 260" className="block w-full min-w-[540px]" role="img" aria-label="A spark travels across a bridge from a startup to an investor, and funding travels back">
+            <svg viewBox="0 0 1000 260" className="block w-full min-w-[ 540px]" role="img" aria-label="A spark travels across a bridge from a startup to an investor, and funding travels back">
               <path id="is-arc" d="M190 120 Q500 -70 810 120" fill="none" stroke="#000" strokeWidth="4" />
               <path id="is-back" d="M810 150 L190 150" fill="none" stroke="#000" strokeWidth="4" />
               <path d="M270 82 V150 M350 54 V150 M430 40 V150 M500 36 V150 M570 40 V150 M650 54 V150 M730 82 V150" stroke="#000" strokeWidth="2" />
@@ -160,21 +160,7 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
         </div>
       </section>
 
-      {/* Sector ticker */}
-      <div className="overflow-hidden border-b-2 border-black bg-black py-4 text-white" aria-label="Sectors on Idea Spark">
-        <div className="is-marquee flex w-max items-center whitespace-nowrap text-3xl font-extrabold tracking-tight md:text-5xl">
-          {[0, 1].map((k) => (
-            <div key={k} className="flex items-center" aria-hidden={k === 1}>
-              {sectors.map((s) => (
-                <span key={s + k} className="flex items-center">
-                  <span className="px-6">{s}</span>
-                  <SparkIcon size={28} />
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       {/* How it works */}
       <section id="how" className="border-b-2 border-black px-5 py-20 md:px-10">

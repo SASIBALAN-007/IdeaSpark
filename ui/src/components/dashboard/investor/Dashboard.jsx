@@ -96,7 +96,7 @@ export default function Dashboard({ user, onLogout }) {
           }`}
       >
         {/* Sidebar header */}
-        <div className="flex h-[76px] shrink-0 items-center justify-between border-b border-gray-200 px-5">
+        <div className="flex h-[ 76px] shrink-0 items-center justify-between border-b border-gray-200 px-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white">
               <TrendingUp size={22} />
@@ -120,7 +120,7 @@ export default function Dashboard({ user, onLogout }) {
 
         {/* Navigation: scrollbar hidden */}
         <div
-          className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="min-h-0 flex-1 overflow-y-auto [ scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           onClick={(event) => {
             if (event.target.closest("a, button")) {
               setSidebarOpen(false);
@@ -148,7 +148,7 @@ export default function Dashboard({ user, onLogout }) {
       {/* Main content */}
       <div className="min-w-0">
         {/* Top navbar */}
-        <header className="sticky top-0 z-30 flex min-h-[76px] items-center justify-between gap-4 border-b border-gray-200 bg-white/95 px-4 backdrop-blur-xl sm:px-7 lg:px-12">
+        <header className="sticky top-0 z-30 flex min-h-[76px ] items-center justify-between gap-4 border-b border-gray-200 bg-white/95 px-4 backdrop-blur-xl sm:px-7 lg:px-12">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -203,19 +203,19 @@ export default function Dashboard({ user, onLogout }) {
 
         <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-7 sm:py-8 lg:px-12">
           {/* Hero */}
-          <section className="group relative isolate flex min-h-[430px] items-center overflow-hidden rounded-3xl bg-black px-6 py-10 text-white sm:px-10 lg:min-h-[390px] lg:px-14">
+          <section className="group relative isolate flex min-h-[ 430px] items-center overflow-hidden rounded-3xl bg-black px-6 py-10 text-white sm:px-10 lg:min-h-[ 390px] lg:px-14">
             {/* Animated decorative circles */}
-            <div className="pointer-events-none absolute -right-20 top-1/2 -z-10 h-[420px] w-[420px] -translate-y-1/2 rounded-full border border-white/10 transition-transform duration-1000 group-hover:scale-110 sm:-right-10 lg:right-0">
+            <div className="pointer-events-none absolute -right-20 top-1/2 -z-10 h-[ 420px] w-[ 420px] -translate-y-1/2 rounded-full border border-white/10 transition-transform duration-1000 group-hover:scale-110 sm:-right-10 lg:right-0">
               <div className="absolute inset-8 animate-[spin_35s_linear_infinite] rounded-full border border-dashed border-white/15" />
               <div className="absolute inset-16 rounded-full border border-white/10" />
               <div className="absolute inset-24 animate-pulse rounded-full border border-white/10" />
             </div>
 
-            <div className="pointer-events-none absolute right-[12%] top-[17%] hidden h-28 w-28 rotate-12 items-center justify-center rounded-[28px] border border-white/15 bg-white/[0.04] shadow-2xl transition duration-500 group-hover:rotate-0 lg:flex">
+            <div className="pointer-events-none absolute right-[12%] top-[17%] hidden h-28 w-28 rotate-12 items-center justify-center rounded-[28px] border border-white/15 bg-white/[ 0.04] shadow-2xl transition duration-500 group-hover:rotate-0 lg:flex">
               <TrendingUp size={54} strokeWidth={1.1} />
             </div>
 
-            <div className="pointer-events-none absolute bottom-[14%] right-[20%] hidden animate-[bounce_5s_infinite] items-center gap-3 rounded-2xl border border-white/15 bg-white/[0.06] p-4 backdrop-blur-lg lg:flex">
+            <div className="pointer-events-none absolute bottom-[14%] right-[20%] hidden animate-[bounce_5s_infinite] items-center gap-3 rounded-2xl border border-white/15 bg-white/[ 0.06] p-4 backdrop-blur-lg lg:flex">
               <CircleDollarSign size={25} />
               <div>
                 <p className="text-xs font-bold">Ideas into impact</p>
@@ -335,7 +335,7 @@ export default function Dashboard({ user, onLogout }) {
                   <article
                     key={item.number}
                     style={{ animationDelay: `${index * 100}ms` }}
-                    className="group flex min-h-[255px] animate-[fadeIn_600ms_ease-out_both] flex-col rounded-2xl border border-gray-200 bg-white p-6 transition duration-300 hover:-translate-y-1.5 hover:border-black hover:shadow-[0_18px_45px_rgba(0,0,0,0.07)]"
+                    className="group flex min-h-[ 255px] animate-[fadeIn_600ms_ease-out_both] flex-col rounded-2xl border border-gray-200 bg-white p-6 transition duration-300 hover:-translate-y-1.5 hover:border-black hover:shadow-[0_18px_45px_rgba(0,0,0,0.07)]"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 transition duration-300 group-hover:border-black group-hover:bg-black group-hover:text-white">
