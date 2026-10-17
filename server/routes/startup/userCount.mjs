@@ -1,7 +1,7 @@
 import { Router } from "express";
 import Investor from "../../models/Investor.mjs";
 const router = Router();
-console.log("userCount");
+
 
 router.get("/startup/usercount",async(req,res)=>{
     try{

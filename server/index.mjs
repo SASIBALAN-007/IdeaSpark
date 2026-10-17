@@ -28,6 +28,13 @@ import Investors_list from "./routes/startup/sidebarpages/investors.mjs";
 import askforinvestment from "./routes/startup/sidebarpages/askForInvestmestRoute.mjs";
 import startupMyIdeas from "./routes/startup/sidebarpages/myIdeas.mjs";
 import startupMyAccount from "./routes/startup/sidebarpages/myAccount.mjs";
+
+// /investor/sidebar APIs GET 
+import Startup_list from "./routes/investor/sidebarpages/startups.mjs";
+import investmentRequest from "./routes/investor/sidebarpages/investmentRequests.mjs";
+import InvestorStartupIeas from "./routes/investor/sidebarpages/startupIdeas.mjs";
+import InvestorMyAccount from "./routes/investor/sidebarpages/myaccount.mjs"
+
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -73,6 +80,12 @@ app.use("/api",startupUserCountrouter);
 app.use("/api",investorUserCountrouter);
 app.use("/api",startupMyIdeas);
 app.use("/api",startupMyAccount);
+
+// ---- Investor sidebar ----
+app.use("/api",Startup_list)
+app.use("/api",investmentRequest);
+app.use("/api",InvestorStartupIeas);
+app.use("/api",InvestorMyAccount);
 
 // startup investors list 
 app.use("/api",Investors_list);

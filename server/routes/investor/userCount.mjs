@@ -13,6 +13,6 @@ router.get("/investor/usercount", async (req, res) => {
         return res.status(400).send({message:error.message});
     }
 });
-console.log("investor count")
-export default router
+
+export default router;
 

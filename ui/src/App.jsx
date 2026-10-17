@@ -1,10 +1,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+
 //Auth//
 import AuthPage from "./components/auth/AuthPage";
+
 // investors//
 import InvestorDashboard from "./components/dashboard/investor/Dashboard";
+import InvestorMyaccount from "./components/dashboard/investor/sidebarPages/Myaccount";
+import InvestmentRequests from "./components/dashboard/investor/sidebarPages/InvestmentRequests";
+import InvestmentStartupIdeas from "./components/dashboard/investor/sidebarPages/StartupIdeas";
+import AboutStartups from "./components/dashboard/investor/sidebarPages/Sartups";
 
 //startup//
 import StartupDashboard from "./components/dashboard/startup/Dashboard";
@@ -13,7 +19,7 @@ import StartupAskForInvestment from "./components/dashboard/startup/sidebarpages
 import StartupMyAccount from "./components/dashboard/startup/sidebarpages/MyAccount";
 import StartupMyIdeas from "./components/dashboard/startup/sidebarpages/MyIdeas"
 
-
+// api middleware
 import { api } from "./utils/api";
 
 export default function App() {
@@ -112,6 +118,22 @@ export default function App() {
             <Navigate to="/" replace />
           )
         }
+      />
+      <Route
+      path= "/investor/user_account"
+      element = { < InvestorMyaccount /> }
+      />
+      <Route
+      path= "/investor/startup_ideas"
+      element = { < InvestmentStartupIdeas /> }
+      />
+      <Route
+      path= "/investor/investment_request"
+      element = { < InvestmentRequests /> }
+      />
+      <Route
+      path= "/investor/startups"
+      element = { < AboutStartups /> }
       />
 
       {/* Unknown path -> back to the landing/auth screen. */}

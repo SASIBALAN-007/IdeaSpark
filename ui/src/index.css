@@ -15,3 +15,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+html {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* old Edge */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;                /* Chrome, Safari, new Edge */
+}

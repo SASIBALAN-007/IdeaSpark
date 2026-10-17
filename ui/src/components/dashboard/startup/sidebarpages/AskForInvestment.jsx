@@ -114,7 +114,11 @@ export default function AskForInvestment() {
   }
 
   return (
-    <main className="min-h-screen bg-white px-4 py-10 text-black sm:px-8">
+    <main  className="min-h-screen bg-white px-4 py-10 text-black sm:px-8">
+      <style>{`
+  html{scrollbar-width:none;-ms-overflow-style:none}
+  html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
+`}</style>
       <div className="mx-auto max-w-2xl">
 
         {/* Header */}

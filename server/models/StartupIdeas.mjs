@@ -82,6 +82,12 @@ const startupIdeaSchema = new mongoose.Schema(
       default: "",
     },
 
+    reviewStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
+    },
+
     // Reference to the separate PDF document
     projectDocument: {
       type: mongoose.Schema.Types.ObjectId,

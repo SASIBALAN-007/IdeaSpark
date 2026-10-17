@@ -55,7 +55,8 @@ export default function IdeaSpark({ onLogout, onGetStarted = () => {} }) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-white font-['Plus_Jakarta_Sans',Helvetica,Arial,sans-serif] text-black">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
 .is-outline{-webkit-text-stroke:2px #000;color:transparent}
 .is-marquee{animation:is-marquee 32s linear infinite}
 .is-marquee:hover{animation-play-state:paused}
@@ -87,7 +88,7 @@ html{scroll-behavior:smooth}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto" onClick={closeOnLinkClick}>
+        <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>aside]:h-full [&>aside]:min-h-0" onClick={closeOnLinkClick}>
           <Sidebar onLogout={handleLogout} />
         </div>
       </aside>
@@ -261,6 +262,7 @@ html{scroll-behavior:smooth}
             </div>
           </div>
           <p className="mt-12 text-sm">&copy; 2026 Idea Spark. All rights reserved.</p>
+
         </div>
       </footer>
     </div>
