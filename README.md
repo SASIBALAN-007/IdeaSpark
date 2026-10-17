@@ -12,28 +12,125 @@ authentication module with **JWT**, **bcrypt**, **httpOnly cookies**, and
 
 ## Project structure
 ```
-server/
-  index.mjs                 # App entry: CORS, cookies, routes, serves built UI
-  .env                      # Config (PORT, MONGO_URI, JWT_SECRET, COOKIE_NAME…)
-  models/
-    Startup.mjs             # "startups" collection (bcrypt hashing)
-    Investor.mjs            # "investors" collection (bcrypt hashing)
-  middleware/
-    auth.mjs                # protect (JWT from cookie) + authorize(roles) (RBAC)
-  utils/
-    jwt.mjs                 # generateToken / verifyToken
-    cookies.mjs             # setAuthCookie / clearAuthCookie (httpOnly)
-    dbConnetion.mjs         # MongoDB connection
-  routes/
-    auth/startupAuth/       # signup.mjs, signin.mjs  (startup collection)
-    auth/investorAuth/      # signup.mjs, signin.mjs  (investor collection)
-    auth/me.mjs             # GET current user from cookie
-    auth/logout.mjs         # POST clears the cookie
-    startup/dashboard.mjs   # RBAC-protected (startup only)
-    investor/dashboard.mjs  # RBAC-protected (investor only)
-ui/
-  index.html                # Loads Tailwind CDN + mounts React
-  src/App.jsx               # Full auth UI (role tabs, login/register, dashboard)
+ideaspark/
+├── .gitignore
+├── README.md
+│
+├── server/                          # Backend — Node.js + Express (ESM, .mjs)
+│   ├── index.mjs                    # App entry: CORS, cookies, routes, serves built UI
+│   ├── .env                         # Config (PORT, MONGO_URI, JWT_SECRET, COOKIE_NAME…)
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── server-err.log
+│   ├── server-out.log
+│   │
+│   ├── middleware/
+│   │   ├── auth.mjs                 # protect (JWT from cookie) + authorize(roles) — RBAC
+│   │   └── projectPDFUpload.mjs     # PDF upload middleware
+│   │
+│   ├── models/
+│   │   ├── Investor.mjs             # "investors" collection (bcrypt hashing)
+│   │   ├── Startup.mjs              # "startups" collection (bcrypt hashing)
+│   │   ├── InvestRequest.mjs        # investment request documents
+│   │   ├── ProjectDocument.mjs      # uploaded project PDFs
+│   │   └── StartupIdeas.mjs         # startup ideas collection
+│   │
+│   ├── routes/
+│   │   ├── auth/
+│   │   │   ├── me.mjs               # GET current user from cookie
+│   │   │   ├── logout.mjs           # POST clears the cookie
+│   │   │   ├── startupAuth/
+│   │   │   │   ├── signup.mjs
+│   │   │   │   └── signin.mjs
+│   │   │   └── investorAuth/
+│   │   │       ├── signup.mjs
+│   │   │       └── signin.mjs
+│   │   ├── startup/
+│   │   │   ├── dashboard.mjs        # RBAC-protected (startup only)
+│   │   │   ├── userCount.mjs
+│   │   │   └── sidebarpages/
+│   │   │       ├── askForInvestmestRoute.mjs
+│   │   │       ├── investors.mjs
+│   │   │       ├── myAccount.mjs
+│   │   │       └── myIdeas.mjs
+│   │   └── investor/
+│   │       ├── dashboard.mjs        # RBAC-protected (investor only)
+│   │       ├── userCount.mjs
+│   │       └── sidebarpages/
+│   │           ├── investmentRequests.mjs
+│   │           ├── myaccount.mjs
+│   │           ├── startupIdeas.mjs
+│   │           └── startups.mjs
+│   │
+│   └── utils/
+│       ├── cookies.mjs              # setAuthCookie / clearAuthCookie (httpOnly)
+│       ├── dbConnetion.mjs          # MongoDB connection
+│       ├── jwt.mjs                  # generateToken / verifyToken
+│       └── Schema.mjs
+│
+└── ui/                              # Frontend — React 19 + Vite + Tailwind (CDN)
+    ├── index.html                   # Loads Tailwind CDN + mounts React
+    ├── package.json
+    ├── package-lock.json
+    ├── vite.config.js               # Dev proxy: /api → :5000
+    ├── .gitignore
+    ├── .oxlintrc.json
+    ├── README.md
+    │
+    ├── public/
+    │   ├── favicon.svg
+    │   ├── icons.svg
+    │   └── ideasparklogo.png
+    │
+    └── src/
+        ├── main.jsx                 # Entry point
+        ├── App.jsx                  # Top-level app (routing/auth state)
+        ├── App.css
+        ├── index.css
+        │
+        ├── assets/
+        │   ├── authbackground.mp4
+        │   ├── hero.png
+        │   ├── react.svg
+        │   └── vite.svg
+        │
+        ├── components/
+        │   ├── logo.jsx
+        │   ├── auth/
+        │   │   ├── AuthPage.jsx
+        │   │   ├── AuthFields.jsx
+        │   │   ├── AuthModeToggle.jsx
+        │   │   ├── BrandPanel.jsx
+        │   │   ├── FormStatus.jsx
+        │   │   └── RoleSelector.jsx
+        │   └── dashboard/
+        │       ├── startup/
+        │       │   ├── Dashboard.jsx
+        │       │   ├── Logout.jsx
+        │       │   ├── Sidebar.jsx
+        │       │   └── sidebarpages/
+        │       │       ├── AskForInvestment.jsx
+        │       │       ├── Investors.jsx
+        │       │       ├── MyAccount.jsx
+        │       │       └── MyIdeas.jsx
+        │       └── investor/
+        │           ├── Dashboard.jsx
+        │           ├── Footer.jsx
+        │           ├── Logout.jsx
+        │           ├── Sidebar.jsx
+        │           ├── Userstatus.jsx
+        │           └── sidebarPages/
+        │               ├── InvestmentRequests.jsx
+        │               ├── Myaccount.jsx
+        │               ├── Sartups.jsx
+        │               └── StartupIdeas.jsx
+        │
+        ├── constants/
+        │   └── roleMeta.js
+        │
+        └── utils/
+            └── api.js               # API helper (fetch wrapper w/ credentials)
+
 ```
 
 ## API endpoints
